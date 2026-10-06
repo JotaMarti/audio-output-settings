@@ -241,8 +241,8 @@ class OutputGroup(Adw.PreferencesGroup):
         self.rate_values = [0] + output["rates"]
         self.rate_row = Adw.ComboRow(
             title="Sample rate",
-            subtitle="Auto switches to the rate of what is playing (no resampling)",
-            model=Gtk.StringList.new(["Auto (follow source)"] + [fmt_rate(r) for r in output["rates"]]),
+            subtitle="Auto follows the source rate, so nothing is resampled",
+            model=Gtk.StringList.new(["Auto"] + [fmt_rate(r) for r in output["rates"]]),
         )
         rate = saved.get("rate", 0)
         self.rate_row.set_selected(self.rate_values.index(rate) if rate in self.rate_values else 0)
@@ -263,7 +263,7 @@ class OutputGroup(Adw.PreferencesGroup):
         self.format_values = [""] + output["formats"]
         self.format_row = Adw.ComboRow(
             title="Bit depth",
-            model=Gtk.StringList.new(["Auto"] + [f"{FORMAT_LABELS[f]}  ({f})" for f in output["formats"]]),
+            model=Gtk.StringList.new(["Auto"] + [FORMAT_LABELS[f] for f in output["formats"]]),
         )
         fmt = saved.get("format", "")
         self.format_row.set_selected(self.format_values.index(fmt) if fmt in self.format_values else 0)
@@ -345,15 +345,15 @@ class Window(Adw.ApplicationWindow):
         glob_group = Adw.PreferencesGroup(title="All outputs")
         self.quantum_row = Adw.ComboRow(
             title="Buffer size",
-            subtitle="Smaller = lower latency, larger = fewer dropouts",
-            model=Gtk.StringList.new([f"{q} samples (~{q / 48:.0f} ms at 48 kHz)" for q in QUANTA]),
+            subtitle="Samples per cycle (ms at 48 kHz). Lower = less latency, higher = fewer dropouts",
+            model=Gtk.StringList.new([f"{q} · {q / 48:.0f} ms" for q in QUANTA]),
         )
         self.quantum_row.set_selected(QUANTA.index(state["quantum"]) if state["quantum"] in QUANTA else 3)
         self.quantum_row.connect("notify::selected", self.mark_dirty)
         glob_group.add(self.quantum_row)
         self.rq_row = Adw.SpinRow.new_with_range(0, 14, 1)
         self.rq_row.set_title("Resampler quality")
-        self.rq_row.set_subtitle("Used when a rate has to be converted. Default 4, max 14 (more CPU)")
+        self.rq_row.set_subtitle("Used only when a rate must be converted. Default 4, max 14")
         self.rq_row.set_value(state["resample_quality"])
         self.rq_row.connect("notify::value", self.mark_dirty)
         glob_group.add(self.rq_row)
