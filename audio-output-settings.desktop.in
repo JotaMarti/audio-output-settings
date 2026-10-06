@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Audio Output Settings
+Comment=Sample rate and bit depth per audio output (PipeWire)
+Exec=python3 @DIR@/pw_output_settings.py
+Icon=audio-speakers
+Categories=AudioVideo;Audio;Settings;
+Keywords=sample;rate;bit;depth;dac;pipewire;audio;
+StartupWMClass=pw_output_settings.py
