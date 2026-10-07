@@ -209,6 +209,10 @@ def write_config(state):
     _write(PULSE_CONF, header + rq)
 
 
+def has_config():
+    return any(os.path.exists(p) for p in (WP_CONF, PW_CONF, CLIENT_CONF, PULSE_CONF, STATE_FILE))
+
+
 def remove_config():
     for path in (WP_CONF, PW_CONF, CLIENT_CONF, PULSE_CONF, STATE_FILE):
         try:
@@ -309,7 +313,7 @@ class Window(Adw.ApplicationWindow):
         reload_btn = Gtk.Button(label="Reload outputs", css_classes=["flat"])
         reload_btn.connect("clicked", lambda *_: (pop.popdown(), self.build()))
         reset_btn = Gtk.Button(label="Reset to system defaults", css_classes=["flat", "destructive-action"])
-        reset_btn.connect("clicked", lambda *_: (pop.popdown(), self.on_reset()))
+        reset_btn.connect("clicked", lambda *_: (pop.popdown(), self.confirm_reset()))
         box.append(reload_btn)
         box.append(reset_btn)
         pop.set_child(box)
@@ -359,6 +363,23 @@ class Window(Adw.ApplicationWindow):
         glob_group.add(self.rq_row)
         page.add(glob_group)
 
+        reset_group = Adw.PreferencesGroup(
+            title="Reset",
+            description="If an output misbehaves, go back to PipeWire's defaults to rule this app out.",
+        )
+        customized = has_config()
+        reset_row = Adw.ActionRow(
+            title="Factory settings",
+            subtitle="Removes every file this app wrote and restarts audio" if customized
+            else "Already using the system defaults",
+        )
+        reset_btn = Gtk.Button(label="Reset", valign=Gtk.Align.CENTER, sensitive=customized,
+                               css_classes=["destructive-action"])
+        reset_btn.connect("clicked", lambda *_: self.confirm_reset())
+        reset_row.add_suffix(reset_btn)
+        reset_group.add(reset_row)
+        page.add(reset_group)
+
         self.page_holder.append(page)
         self.apply_btn.set_sensitive(False)
 
@@ -391,6 +412,20 @@ class Window(Adw.ApplicationWindow):
         write_config(state)
         self.apply_btn.set_sensitive(False)
         self._restart_and_reload("Applied — audio restarted")
+
+    def confirm_reset(self):
+        dialog = Adw.AlertDialog(
+            heading="Reset to factory settings?",
+            body="All outputs go back to PipeWire's defaults (48 kHz, automatic bit depth). "
+                 "Audio restarts, so playback stops for a second.",
+        )
+        dialog.add_response("cancel", "Cancel")
+        dialog.add_response("reset", "Reset")
+        dialog.set_response_appearance("reset", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+        dialog.connect("response", lambda _d, r: r == "reset" and self.on_reset())
+        dialog.present(self)
 
     def on_reset(self):
         remove_config()

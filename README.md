@@ -42,7 +42,7 @@ This app writes those files for you.
 | ⏱️ **Buffer size** | Trade latency against dropouts (128 to 4096 samples). |
 | 🎛️ **Resampler quality** | Raise the quality used when conversion is unavoidable (0–14). |
 | 💾 **Persistent** | Settings are saved as standard config files and survive reboots. The app does not need to stay open. |
-| ♻️ **One-click reset** | Removes everything the app wrote and restores the system defaults. |
+| ♻️ **Factory reset** | A **Reset** button at the bottom of the window removes everything the app wrote and restores PipeWire's defaults, after asking for confirmation. |
 
 ## 📦 Requirements
 
@@ -66,7 +66,7 @@ cd audio-output-settings
 
 Then open **Audio Output Settings** from your app menu. You can also run it directly with `python3 pw_output_settings.py`.
 
-To uninstall, click **Reset to system defaults** in the app menu, then delete the launcher:
+To uninstall, click **Reset** under **Reset → Factory settings** at the bottom of the window, then delete the launcher:
 
 ```bash
 rm ~/.local/share/applications/audio-output-settings.desktop
@@ -81,6 +81,7 @@ rm ~/.local/share/applications/audio-output-settings.desktop
 3. Set **Bit depth**. **32-bit** is usually best, because PipeWire processes audio internally as 32-bit float and 16- or 24-bit sources fit into 32-bit without any loss.
 4. Click **Apply**. PipeWire restarts, so audio drops out for about a second and some players (such as Spotify) need you to press play again.
 5. Check the **Now** row while music is playing to confirm the change.
+6. Want to undo everything? Click **Reset** at the bottom of the window to go back to factory settings.
 
 ## ⚙️ How it works
 
@@ -114,6 +115,12 @@ HD-Audio chips carry 20- and 24-bit samples inside a 32-bit container, so "32-bi
 <summary><b>Should I lock my DAC to 96 or 192 kHz?</b></summary>
 
 Usually not. Upsampling a 44.1 kHz source does not add any information. **Auto** delivers each track at its native rate, which is the cleanest path.
+</details>
+
+<details>
+<summary><b>My DAC disconnects or stops being detected</b></summary>
+
+First click **Reset** to go back to factory settings. If the device still drops out, the app is not the cause. Check `journalctl -k` for `USB disconnect` or `error -71` messages: those point to a bad cable, connector or USB port. Try a different port, ideally one on another USB controller.
 </details>
 
 <details>
